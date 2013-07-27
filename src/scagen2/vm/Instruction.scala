@@ -42,19 +42,19 @@ object Instruction {
    * A function that takes a stack `s` and does `s.push(s.pop() + s.pop())`. The type ''(SimpleStack) => ()''
    * is assigned to `OpType` for brevity.
    */
-  val add                          = (s: SimpleStack) => s.push(s.pop() + s.pop())
+  val add            : OpType      = (s: SimpleStack) => s.push(s.pop() + s.pop())
   /**
    * `s.push(s.pop() - s.pop())`
    */
-  val sub                          = (s: SimpleStack) => s.push(s.pop() - s.pop())
+  val sub            : OpType      = (s: SimpleStack) => s.push(s.pop() - s.pop())
   /**
    * `s.push(s.pop() * s.pop())`
    */
-  val mul                          = (s: SimpleStack) => s.push(s.pop() * s.pop())
+  val mul            : OpType      = (s: SimpleStack) => s.push(s.pop() * s.pop())
   /**
    * `s.push(s.pop() / s.pop())`
    */
-  val div                          = (s: SimpleStack) => s.push(s.pop() / s.pop())
+  val div            : OpType      = (s: SimpleStack) => s.push(s.pop() / s.pop())
   /*  /**
      * `s.push(math.abs(s.pop()))`
      */
