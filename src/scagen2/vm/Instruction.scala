@@ -26,7 +26,17 @@ object Instruction {
         op => (s: SimpleStack) => s.push(op(s.pop))
       }
     }
-    binaryOps ++ unaryOps
+
+    val stackOps: Seq[OpType] = Seq(
+      (s: SimpleStack) => s.drop()
+      , (s: SimpleStack) => s.dup()
+    , (s: SimpleStack) => s.over()
+    , (s: SimpleStack) => s.rot()
+    , (s: SimpleStack) => s.swap()
+    , (s: SimpleStack) => s.clear()
+    )
+
+    binaryOps ++ unaryOps ++ stackOps
   }
   /**
    * A function that takes a stack `s` and does `s.push(s.pop() + s.pop())`. The type ''(SimpleStack) => ()''
