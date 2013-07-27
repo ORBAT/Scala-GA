@@ -2,25 +2,31 @@ package scagen2.utils
 
 import scala.io.Source
 
+case class Header(text: String)
+
 /**
  * Reads CSV data from a file and gives some tools for handling it.
  * @param src
  * @param separator
  * @param hasHeader
  */
-class CsvReader(src: Source, separator: String, hasHeader: Boolean = true) {
+class CsvReader(src: Source, separator: Char, hasHeader: Boolean = true) {
 
-  case class Header(text: String)
-
+  private[this] val srcStream                          = src.getLines().toStream
   /**
    * Returns everything on the first row of the CSV file as a Header object.
    * @return The first row
    */
-  lazy val header    : Seq[Header]            = ???
+  lazy          val header    : Seq[Header]            = {
+    if(hasHeader)
+      srcStream.head.split(separator).toSeq.map(colName => Header(colName))
+    else
+      Seq()
+  }
   /**
    * Simply all columns as Streams of Strings (both of which might be arbitrarily large)
    */
-  lazy val rawColumns: Stream[Stream[String]] = ???
+  lazy          val rawColumns: Stream[Stream[String]] = ???
 
   /**
    * Returns a Stream that contains every element in the column with index `colIdx`. The stream should not be infinite,
