@@ -1,6 +1,6 @@
 import java.io.File
 import org.scalatest.FlatSpec
-import scagen2.utils.CsvReader
+import scagen2.utils._
 import scala.collection.immutable
 import scala.io.{Codec, Source}
 
@@ -14,11 +14,12 @@ class CsvReaderSpec extends FlatSpec {
     /**
      * Test header
      */
-    val header: Seq[String] = 'A' to headerMaxChar map (c => s"$c $c")
+    val headerStr: Seq[String] = 'A' to headerMaxChar map (c => s"$c $c")
+    val headerObjects: Seq[Header] = headerStr map Header
     /**
      *
      */
-    val columns: Seq[Seq[String]] = (0 to header.length - 1) map {
+    val columns: Seq[Seq[String]] = (0 to headerStr.length - 1) map {
       colIdx => (1 to testMaterialRows).map(itemIdx => (itemIdx + colIdx * testMaterialRows).toString) // note toString
     }
     val testSource: Source = {
@@ -35,19 +36,19 @@ class CsvReaderSpec extends FlatSpec {
          *
          * The value for an item on a row is itemIndex (starts from 1) + columnIndex (starts from 0) * testMaterialRows
          */
-        header.mkString("", ",","\n") + columns.transpose.map(_.mkString(",")).mkString("\n")
+        headerStr.mkString("", ",","\n") + columns.transpose.map(_.mkString(",")).mkString("\n")
       }
       Source.fromChars(testMaterial.toCharArray)
     }
 
-    val csvReader = new CsvReader(testSource, ",")
+    val csvReader = new CsvReader(testSource, ',')
 
   }
 
   behavior of "A CsvReader"
 
   it should "give the correct header" in new TestMaterialReader {
-    assert(csvReader.header === header)
+    assert(csvReader.header === headerObjects)
   }
 
   it should "give the correct raw columns" in new TestMaterialReader {
@@ -55,6 +56,10 @@ class CsvReaderSpec extends FlatSpec {
   }
 
   it should "give the correct column using apply(Header)" in new TestMaterialReader {
+    fail
+  }
+
+  it should "give the correct column using apply(Int)" in new TestMaterialReader {
     fail
   }
 
