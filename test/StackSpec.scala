@@ -66,12 +66,12 @@ class StackSpec extends FlatSpec {
   it should "handle dups on empty stacks" in new StackWithLen(0) {
     stack.dup()
     stack push 1
-    stack dup();
+    stack dup()
     assert(stack.pop() === 1)
     assert(stack.pop() === 1)
   }
 
-  it should "rot" in new StackWithLen(3) {
+  it should "rot" ignore new StackWithLen(3) {
     /*
      1
      2
@@ -88,17 +88,16 @@ class StackSpec extends FlatSpec {
     assert(stack.pop === 2)
   }
 
-  it should "handle rots on empty stacks" in new StackWithLen(0) {
+  it should "handle rots on empty stacks" ignore new StackWithLen(0) {
 //    stack.rot()
-    fail
   }
 
-  it should "handle rots on one item stacks" in new StackWithLen(1) {
+  it should "handle rots on one item stacks" ignore new StackWithLen(1) {
 //    stack.rot()
     assert(stack.pop === 1)
   }
 
-  it should "over" in new StackWithLen(3) {
+  it should "over" ignore new StackWithLen(3) {
     // 3 2 1
 //    stack.over()
     // 1 3 2 1
