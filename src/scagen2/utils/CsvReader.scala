@@ -2,18 +2,38 @@ package scagen2.utils
 
 import scala.io.Source
 
-object CsvReader {
-  type Ret = Map[String, Seq[String]]
-}
+/**
+ * Reads CSV data from a file and gives some tools for handling it.
+ * @param src
+ * @param separator
+ * @param hasHeader
+ */
+class CsvReader(src: Source, separator: String, hasHeader: Boolean = true) {
 
-class CsvReader(src:Source, separator:String, hasHeader: Boolean = true) extends (() => CsvReader.Ret) {
-
-  private[this] lazy val csv: CsvReader.Ret = ???
+  case class Header(text: String)
 
   /**
-   * Returns either everything on the first row of the CSV file. Throws an exception if things don't work out.
+   * Returns everything on the first row of the CSV file as a Header object.
    * @return The first row
    */
-  def header: Seq[String] = ???
-  def apply() = csv
+  lazy val header    : Seq[Header]            = ???
+  /**
+   * Simply all columns as Streams of Strings (both of which might be arbitrarily large)
+   */
+  lazy val rawColumns: Stream[Stream[String]] = ???
+
+  /**
+   * Returns a Stream that contains every element in the column with index `colIdx`. The stream should not be infinite,
+   * but itc an be arbitrarily large.
+   * @param colIdx Get the data for the column with this index, e.g. 0 would be the first column of the data.
+   * @return A Stream that contains the specified column
+   */
+  def apply(colIdx: Int): Stream[String] = ???
+
+  /**
+   * Returns a Stream that contains the data for the given Header object.
+   * @param header
+   * @return
+   */
+  def apply(header: Header): Stream[String] = ???
 }
