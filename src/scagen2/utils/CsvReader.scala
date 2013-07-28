@@ -4,13 +4,50 @@ import scala.io.Source
 
 case class ColumnMetadata(text: String)
 
+object CsvReader {
+  val toOptInt: (String) => Option[Int] =
+    (s: String) =>
+      try
+        Some(java.lang.Integer.parseInt(s))
+      catch {
+        case _: Throwable => None
+      }
+  val toOptDouble: (String) => Option[Double] =
+    (s: String) =>
+      try Some(java.lang.Double.parseDouble(s))
+      catch {
+        case _: Throwable => None
+      }
+
+  def toOptDate(formatString: String) = {
+    val format = new java.text.SimpleDateFormat(formatString)
+    (dateStr: String) => {
+      try
+        Some(format.parse(dateStr))
+      catch {
+        case _: Throwable => None
+      }
+    }
+  }
+
+}
+
 /**
  * Reads CSV data from a file and gives some tools for handling it.
- * @param src
- * @param separator
- * @param hasHeader
+ * @param src Source to read the CSV lines form
+ * @param separator Separator character. Defaults to ','
  */
-class CsvReader(src: Source, separator: Char) {
+class CsvReader(src: Source, separator: Char = ',') {
+
+  import collection.mutable.{Map => MutMap}
+
+  def columnMap[T](c: ColumnMetadata, f: (String) => T): Stream[T] = {
+    this(c) map f
+  }
+
+  def columnMap[T](idx: Int, f: (String) => T): Stream[T] = {
+    this(idx) map f
+  }
 
   private[this] val rawLineStream: Stream[Seq[String]] = {
     def explodeStr(s: String): Seq[String] = s.split(separator).toSeq

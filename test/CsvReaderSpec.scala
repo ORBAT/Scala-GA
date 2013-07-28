@@ -1,4 +1,5 @@
 import java.io.File
+import java.util.Date
 import org.scalatest.FlatSpec
 import scagen2.utils._
 import scala.collection.immutable
@@ -8,7 +9,7 @@ class CsvReaderSpec extends FlatSpec {
 
   trait TestMaterialReader {
     private implicit val codec = Codec.UTF8
-    private[this] val testMaterialRows = 20000
+    private val testMaterialRows = 20000
     private[this] val headerMaxChar: Char = ('A'.toInt + 3).toChar
     /**
      * Test header
@@ -111,10 +112,77 @@ class CsvReaderSpec extends FlatSpec {
     checkColumnStreams(columnStreams)
   }
 
+
+  it should "return columns with filters applied" in new TestMaterialReader {
+    val filteredFirst = csvReader.columnMap(0, CsvReader.toOptInt)
+    fail
+  }
+
+  it should "provide a few correct default filters" in new {
+
+    import CsvReader._
+
+    def compareDouble(d: Double) {
+      def fmt(d: Double) = d.formatted("%.2g")
+      val od = toOptDouble(fmt(d))
+      assert(od.isDefined, s"Trying to convert ${fmt(d)} to Option[Double] got us a None. That's usually bad.")
+      val ddiff = math.abs(od.get - d)
+      val maxdDiff = 0.0000001
+      assert(
+        ddiff < maxdDiff,
+        s"Converting ${fmt(d)} to Option[Double] got us Some(${od.get}). The difference is $ddiff, with " +
+        s"maxdDiff being $maxdDiff")
+    }
+
+    def compareInt(i: Int) {
+      val id = toOptInt(i.toString)
+      assert(id.isDefined, s"Trying to convert $i to Option[Int] got us a None. That's usually bad.")
+      val idiff = math.abs(id.get - i)
+      val maxiDiff = 1
+      assert(idiff < maxiDiff, s"Converting $i to Option[Int] got us Some(${id.get}). The difference is $idiff, with " +
+                               s"maxiDiff being $maxiDiff")
+    }
+
+    val formatStr = "yyyy-MM-dd"
+    val toDateWithFormat = toOptDate(formatStr)
+    val dateFormatter = new java.text.SimpleDateFormat(formatStr)
+    def compareDate(d:Date) {
+      val id = toDateWithFormat(dateFormatter.format(d))
+      assert(id.isDefined, s"Trying to convert ${dateFormatter.format(d)} to Option[Date] got us a None. That's usually bad.")
+      assert(d.compareTo(id.get) === 0, s"d.compareTo(id.get) was ${d.compareTo(id.get)} instead of 0. That's usually bad.")
+    }
+
+    /*
+    val start = 100
+    val num = 3
+    val step = 1
+    val end = start (step * (num-1))
+     */
+
+
+    val startInMillis = 946684800l * 1000l
+    val stepInMillis = 60l * 60l * 24l * 1000l
+    val numDates = 20
+    val endInMillis = startInMillis + stepInMillis * (numDates - 1)
+    val dates = (0 to numDates - 1).map { idx =>
+      new Date(startInMillis + idx * stepInMillis)
+    }
+
+    val (brokenOrLastDate, allDatesAfter) = dates.tail.foldLeft((dates.head, true)) {
+    /*
+     * if acc has a false in it, the Date in acc failed its elem.after(acc._1) and we just pass the acc along as is
+     * otherwise we give the next guy the current date and the result of comparing it with the previous one.
+     */
+      (acc, elem) => if(!acc._2) acc else (elem, elem.after(acc._1))
+    }
+    assert(allDatesAfter, s"!allDatesAfter, the Date that failed is $brokenOrLastDate")
+    fail
+
+  }
+
   /*  it should "should work in LIFO order" in new StackWithLen(2) {
       assert(stack.pop() === 2)
       assert(stack.pop() === 1)
       assert(stack.pop().isNaN)
     }*/
-
 }
