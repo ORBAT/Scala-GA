@@ -5,7 +5,13 @@ object InstructionTools {
    * A function that when given the paremeter `item` returns a function that pushes `item` onto a stack `s`
    *
    */
-  val pushGen = (item: SimpleStack.ItemType) => (s: SimpleStack) => s.push(item)
+  import SimpleStack.ItemType
+  import Instruction.OpType
+  def pushGen(item: SimpleStack.ItemType): (SimpleStack) => Unit = (s: SimpleStack) => s.push(item)
+
+  def toOpType(f:(ItemType, ItemType) => ItemType): OpType = {
+    (s: SimpleStack) => s.push(f(s.pop(), s.pop()))
+  }
 }
 
 object Instruction {
@@ -23,7 +29,7 @@ object Instruction {
     val unaryOps: Seq[OpType] = {
       import math._
       Seq[(Double) => Double](abs, exp, log, sin, tan, cos, sinh, tanh, cosh, asin, atan, acos, exp, floor, ceil).map {
-        op => (s: SimpleStack) => s.push(op(s.pop))
+        op => (s: SimpleStack) => s.push(op(s.pop()))
       }
     }
 

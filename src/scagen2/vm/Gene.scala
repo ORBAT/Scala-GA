@@ -1,6 +1,6 @@
 package scagen2.vm
 
-class Gene(instructions: Vector[(SimpleStack) => Unit]) {
+class Gene(instructions: Seq[(SimpleStack) => Unit]) {
 
   def execute() = {
     val stack = new SimpleStack
