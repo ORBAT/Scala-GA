@@ -5,18 +5,34 @@ object InstructionTools {
    * A function that when given the paremeter `item` returns a function that pushes `item` onto a stack `s`
    *
    */
+
   import SimpleStack.ItemType
   import Instruction.Operation
+
   def pushGen(item: SimpleStack.ItemType): (SimpleStack) => Unit = (s: SimpleStack) => s.push(item)
 
-  def toOpType(f:(ItemType, ItemType) => ItemType): Operation = {
+  type BinFn = (ItemType, ItemType) => ItemType
+
+  def toOpType(f: (ItemType, ItemType) => ItemType): Operation = {
     (s: SimpleStack) => s.push(f(s.pop(), s.pop()))
   }
+  val basicMathFns: Seq[(String, BinFn)] = Seq((" + ", _ + _)
+                                                  , (" - ", _ - _)
+                                                  , (" * ", _ * _)
+                                                  , (" / ", _ / _))
+
+  val advMathFns: Seq[(String, BinFn)] = Seq((" atan2 ", math.atan2 _)
+                                            , (" hypot ", math.hypot _)
+                                            , (" max ", math.max _)
+                                            , (" min ", math.min _)
+                                            , (" pow ", math.pow _))
+  val binaryFns = basicMathFns ++ advMathFns
+
 }
 
 object Instruction {
   type Operation = (SimpleStack) => Unit
-  val binaryOps: Seq[Operation] = {
+  val binaryOps      : Seq[Operation] = {
     import math._
     val selfDefined: Seq[(SimpleStack) => Unit] = Seq(add, sub, mul, div)
     val ops: Seq[(SimpleStack) => Unit] = Seq[(Double, Double) => Double](atan2, hypot, max, min, pow) map {
@@ -24,20 +40,20 @@ object Instruction {
     }
     selfDefined ++ ops
   }
-  val unaryOps : Seq[Operation] = {
+  val unaryOps       : Seq[Operation] = {
     import math._
     Seq[(Double) => Double](abs, exp, log, sin, tan, cos, sinh, tanh, cosh, asin, atan, acos, exp, floor, ceil).map {
       op => (s: SimpleStack) => s.push(op(s.pop()))
     }
   }
   val stackOps       : Seq[Operation] = Seq(
-                                          (s: SimpleStack) => s.drop()
-                                          , (s: SimpleStack) => s.dup()
-                                          , (s: SimpleStack) => s.over()
-                                          , (s: SimpleStack) => s.rot()
-                                          , (s: SimpleStack) => s.swap()
-                                          , (s: SimpleStack) => s.clear()
-                                        )
+                                             (s: SimpleStack) => s.drop()
+                                             , (s: SimpleStack) => s.dup()
+                                             , (s: SimpleStack) => s.over()
+                                             , (s: SimpleStack) => s.rot()
+                                             , (s: SimpleStack) => s.swap()
+                                             , (s: SimpleStack) => s.clear()
+                                           )
   val allInstructions: Seq[Operation] = {
     binaryOps ++ unaryOps ++ stackOps
   }
