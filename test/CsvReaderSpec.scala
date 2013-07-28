@@ -114,7 +114,11 @@ class CsvReaderSpec extends FlatSpec {
 
 
   it should "return columns with filters applied" in new TestMaterialReader {
-    val filteredFirst = csvReader.columnMap(0, CsvReader.toOptInt)
+    val mappedToOptInts = csvReader.columnMap(0, CsvReader.toOptInt)
+    // flatten Stream[Option[Int]] into Stream[Int], then turn everything back into string
+    val stringsFromInts = mappedToOptInts.flatten.map(_.toString)
+    assert(stringsFromInts.length === csvReader(0).length, s"stringsFromInts.length (${stringsFromInts.length}) === csvReader(0).length ${} didn't work " +
+                                                           s"out for you.")
     fail
   }
 
