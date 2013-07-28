@@ -2,7 +2,7 @@ package scagen2.utils
 
 import scala.io.Source
 
-case class Header(text: String)
+case class ColumnMetadata(text: String)
 
 /**
  * Reads CSV data from a file and gives some tools for handling it.
@@ -11,26 +11,23 @@ case class Header(text: String)
  * @param hasHeader
  */
 class CsvReader(src: Source, separator: Char) {
-  private[this] val rawLineStream = {
-    def explodeStr(s: String): Seq[String] = {
-      s.split(separator).toSeq
-    }
-    src.getLines().toStream.map(explodeStr)
+
+  private[this] val rawLineStream: Stream[Seq[String]] = {
+    def explodeStr(s: String): Seq[String] = s.split(separator).toSeq
+    src.getLines().toStream.map(explodeStr(_))
   }
-  private[this]      val rawLineStreamNoHeader            = rawLineStream.tail
+  private[this] val rawLineStreamNoHeader = rawLineStream.tail
   /**
-   * Returns everything on the first row of the CSV file as a Header object.
+   * Returns everything on the first row of the CSV file as a ColumnMetadata object.
    * @return The first row
    */
-  private[this] lazy val headerToIdxMap: Map[Header, Int] = header.zipWithIndex.toMap
-
-  lazy val header: Seq[Header] = rawLineStream.head.map(colName => Header(colName))
+  private[this] lazy val headerToIdxMap: Map[ColumnMetadata, Int] = header.zipWithIndex.toMap
+  lazy val header: Seq[ColumnMetadata] = rawLineStream.head.map(colName =>
+    ColumnMetadata(colName))
   /**
    * Simply all columns as Streams of Strings (both of which might be arbitrarily large)
    */
-  lazy val rawColumns: Seq[Stream[String]] = {
-    ???
-  }
+  lazy val rawColumns: Seq[Stream[String]] = header.map(col => this(col))
 
   /**
    * Returns a Stream that contains every element in the column with index `colIdx`. The stream should not be infinite,
@@ -43,11 +40,11 @@ class CsvReader(src: Source, separator: Char) {
   }
 
   /**
-   * Returns a Stream that contains the data for the given Header object.
+   * Returns a Stream that contains the data for the given ColumnMetadata object.
    * @param header
    * @return
    */
-  def apply(header: Header): Stream[String] = {
+  def apply(header: ColumnMetadata): Stream[String] = {
     val colIdx = headerToIdxMap(header)
     rawLineStreamNoHeader.map(column => column(colIdx))
   }

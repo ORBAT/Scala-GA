@@ -7,21 +7,18 @@ import scala.io.{Codec, Source}
 class CsvReaderSpec extends FlatSpec {
 
   trait TestMaterialReader {
-    val testMaterialRows = 4
-    val headerMaxChar    = 'D'
-    implicit val codec = Codec.UTF8
+    private implicit val codec = Codec.UTF8
+    private[this] val testMaterialRows = 20000
+    private[this] val headerMaxChar: Char = ('A'.toInt + 3).toChar
     /**
      * Test header
      */
-    val headerStr    : Seq[String]      = 'A' to headerMaxChar map (c => s"$c $c")
-    val headerObjects: Seq[Header]      = headerStr map Header
+    private[this] val headerStr: Seq[String] = 'A' to headerMaxChar map (c => s"$c $c")
+    protected[this] val headerObjects: Seq[ColumnMetadata] = headerStr map ColumnMetadata
     /**
      *
      */
-    val columns      : Seq[Seq[String]] = (0 to headerStr.length - 1) map {
-      colIdx => (1 to testMaterialRows).map(itemIdx => (itemIdx + colIdx * testMaterialRows).toString) // note toString
-    }
-    val testSource   : Source           = {
+    val testSource: Source = {
       /**
        * A test CSV string that looks something like (with testMaterialRows = 4 and headerMaxChar = 'D')
        * {{{A A,B B,C C,D D
@@ -31,6 +28,11 @@ class CsvReaderSpec extends FlatSpec {
        *  4,8,12,16}}}
        */
       val testMaterial: String = {
+        val columns: Seq[Seq[String]] = (0 to headerStr.length - 1) map {
+          colIdx =>
+            (1 to testMaterialRows)
+            .map(itemIdx => (itemIdx + colIdx * testMaterialRows).toString) // note toString
+        }
         /* A seq of seqs that contains the test data for each _column_. Later transposed to rows.
          *
          * The value for an item on a row is itemIndex (starts from 1) + columnIndex (starts from 0) * testMaterialRows
@@ -47,12 +49,9 @@ class CsvReaderSpec extends FlatSpec {
      * @param found What we actually found at the given indices
      * @return `true` when the found value matches what we expect, `false` otherwise.
      */
-    def checkElem(colIdx: Int)(itemIndex: Int, found: String): Boolean = {
+    def checkElem(colIdx: Int)(itemIndex: Int, found: String) {
       val wanted = (itemIndex + 1 + colIdx * testMaterialRows).toString
-      val valuesMatched = wanted == found
-      println(s"wanted $wanted found $found")
-      assert(valuesMatched)
-      valuesMatched
+      assert(wanted === found, s"Checking column $colIdx, item $itemIndex. Wanted $wanted but found $found")
     }
 
     def checkColumnStreams(columnStreams: Seq[Stream[String]]) {
@@ -100,7 +99,12 @@ class CsvReaderSpec extends FlatSpec {
 
   }
 
-  it should "give the correct columns using apply(Header)" in new TestMaterialReader {
+  it should "give the correct columns using rawColumns" in new TestMaterialReader {
+    val columnStreams: Seq[Stream[String]] = csvReader.rawColumns
+    checkColumnStreams(columnStreams)
+  }
+
+  it should "give the correct columns using apply(ColumnMetadata)" in new TestMaterialReader {
     val columnStreams = csvReader.header.map {
       header => csvReader(header)
     }
