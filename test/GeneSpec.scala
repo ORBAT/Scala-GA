@@ -34,11 +34,13 @@ class GeneSpec extends FlatSpec {
 
         case _ => (strAcc, accum)
       }
-    val sndPushed = numbersStream.head
-    val fstPushed = numbersStream.tail.head
+    val a = numbersStream.tail.head
+    val b = numbersStream.head
     val (firstFnSymbol, firstFn) = stringFnPairs.head
-    inner(fnPairsTail = stringFnPairs.tail, accum = firstFn(fstPushed, sndPushed), doubles = numbersStream.tail.tail,
-           strAcc = s"(((($fstPushed$firstFnSymbol$sndPushed)")
+    val res = firstFn(a, b)
+    println(s"fstPushed = $b\tsndPushed = $a\tfirstFnSymbol = $firstFnSymbol\n\t\t$res")
+    inner(fnPairsTail = stringFnPairs.tail, accum = res, doubles = numbersStream.tail.tail,
+           strAcc = s"(((($b$firstFnSymbol$a)")
   }
 
   abstract class TestBinOpGene(opSymbol: String, op: (ItemType, ItemType) => ItemType) {
@@ -73,38 +75,72 @@ class GeneSpec extends FlatSpec {
 
     import Instruction.Operation
 
+    val step: ItemType = 1d
+    val steppedDoubles = Stream.iterate(1d)(_ + step)
+    val selectedOps = basicMathFns.toList.reverse
+
+
     // TODO: create instructions to the tune of 2 4 + 6 - 8 * 10 /
-    val (opsAsString: String, longOps: List[Operation]) = {
-      val step: ItemType = 1.79
-      val steppedDoubles = Stream.iterate(0.3901)(_ + step)
+    val (opsAsString: String, chainedOps: List[Operation]) = {
       val values: Iterator[ItemType] = steppedDoubles.toIterator
       import SimpleStack.ItemType
       import InstructionTools._
 
-      def funToPushAndOp(value: ItemType, x: (ItemType, ItemType) => ItemType): Seq[Operation] = {
+      def funToPushAndOp(value: ItemType, x: BinFn): Seq[Operation] = {
         Seq(pushGen(value), toOpType(x))
       }
 
-      // generates a nice String representation of the thing we're trying to do as well
+
+      /**
+       * Takes all binary operations in `ops`
+       * @param ops a list of tuples, all containing a function's "symbol" and the function itself
+       * @param instrAccum an accumulator for Operations
+       * @param strAccum accumulator for the string representation
+       * @return
+       */
       @tailrec def genOperations(ops: List[(String, BinFn)]
                                  , instrAccum: List[Operation]
-                                 , strAccum: String): (String, List[Operation]) = ops.reverse match {
+                                 , strAccum: String): (String, List[Operation]) = ops match {
         case (symbol, op) :: rest => {
           val nextVal = values.next()
+          println(s"genOperations loop\n\tpush($nextVal)\n\t$symbol")
           genOperations(rest, instrAccum ++ funToPushAndOp(nextVal, op), s"${strAccum} $nextVal $symbol")
         }
         case _ => (strAccum, instrAccum)
       }
 
       val firstValue = values.next()
-      val (stringRep, ops) = genOperations(basicMathFns.toList, List(), s"$firstValue")
+      val (stringRep, ops) = genOperations(selectedOps, List(), s"$firstValue")
       (stringRep, pushGen(firstValue) :: ops)
 
     }
 
-    println(s"string rep of op being prepared\n$opsAsString\n")
 
-    fail
+    val g = new Gene(chainedOps)
+    val g2 = {
+      import Instruction._
+      new Gene(Seq(pushGen(1.0), pushGen(2.0), div, pushGen(3.0), mul, pushGen(4.0), sub,
+                    pushGen(5.0), add))
+    }
+    val geneResult = g.execute()
+    val g2Result = g2.execute()
+
+    val (secondOpinionStr, secondOpinion) = giveResult(steppedDoubles, selectedOps)
+    println(s"RPN $opsAsString -->\nNOR $secondOpinionStr -->\n\tgeneResult = $geneResult" +
+            s"\n\tg2Result = $g2Result" +
+            s"\n\tsecondOpinion = $secondOpinion\n")
+    assert(g.)
+    assert(math.abs(geneResult - secondOpinion) < 0.001)
+  }
+
+  it should "execute() slightly more sophisticated genes" in new {
+    val oneByTwo = Seq(pushGen(2d), pushGen(1d), Instruction.div)
+    assert(new Gene(oneByTwo).execute() === 0.5)
+    assert(new Gene(oneByTwo ++ Seq(pushGen(3d), Instruction.mul)).execute() === 1.5)
+    assert(new Gene(Seq(pushGen(2d), pushGen(1d), Instruction.div, pushGen(3d), Instruction.mul)).execute() === 1.5)
+    assert(new Gene(Seq(pushGen(1d), pushGen(2d), Instruction.div
+                         , pushGen(3d), Instruction.mul, pushGen(4d), Instruction.sub, pushGen(5d)
+                         , Instruction.add)).execute() === 1.5)
 
   }
 
