@@ -9,7 +9,7 @@ object InstructionTools {
   import SimpleStack.ItemType
   import Instruction.Operation
 
-  def pushGen(item: SimpleStack.ItemType): (SimpleStack) => Unit = (s: SimpleStack) => s.push(item)
+  def pushGen(item: SimpleStack.ItemType): Operation = (s: SimpleStack) => s.push(item)
 
   type BinFn = (ItemType, ItemType) => ItemType
 
@@ -20,17 +20,17 @@ object InstructionTools {
       s.push(f(a, b))
     }
   }
-  val basicMathFns: Seq[(String, BinFn)] = Seq((" + ", _ + _)
-                                                  , (" - ", _ - _)
-                                                  , (" * ", _ * _)
-                                                  , (" / ", _ / _))
 
-  val advMathFns: Seq[(String, BinFn)] = Seq((" atan2 ", math.atan2 _)
-                                            , (" hypot ", math.hypot _)
-                                            , (" max ", math.max _)
-                                            , (" min ", math.min _)
-                                            , (" pow ", math.pow _))
-  val binaryFns = basicMathFns ++ advMathFns
+  val basicMathFns: Seq[(String, BinFn)] = Seq((" + ", _ + _)
+                                                , (" - ", _ - _)
+                                                , (" * ", _ * _)
+                                                , (" / ", _ / _))
+  val advMathFns  : Seq[(String, BinFn)] = Seq((" atan2 ", math.atan2 _)
+                                                , (" hypot ", math.hypot _)
+                                                , (" max ", math.max _)
+                                                , (" min ", math.min _)
+                                                , (" pow ", math.pow _))
+  val binaryFns                          = basicMathFns ++ advMathFns
 
 }
 
