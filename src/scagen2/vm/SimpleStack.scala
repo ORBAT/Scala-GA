@@ -61,6 +61,12 @@ class SimpleStack {
     ret
   }
 
+  //  over ( a b -- a b a )
+  //  rot  ( a b c -- b c a )
+  def rot() = ???
+
+  def over() = ???
+
   def length = stack.length
 
   /*
