@@ -140,7 +140,7 @@ class CsvReaderSpec extends FlatSpec {
       val max = 10d
       val step = (max - min) / maxDoubles
       x => min + (step * x)
-    } map compareDouble
+    } foreach compareDouble
 
 
 
@@ -152,20 +152,19 @@ class CsvReaderSpec extends FlatSpec {
                          s"should be 0")
     }
 
-    -20 to 20 map compareInt
-
-
+    -20 to 20 foreach compareInt
 
 
 
     val formatStr = "yyyy-MM-dd"
-    val toDateWithFormat = toOptDate(formatStr)
-    val dateFormatter = new java.text.SimpleDateFormat(formatStr)
-    def compareDate(d:Date) {
-      val id = toDateWithFormat(dateFormatter.format(d))
-      assert(id.isDefined, s"Trying to convert ${dateFormatter.format(d)} to Option[Date] got us a None. That's usually bad.")
-      assert(d.compareTo(id.get) === 0, s"d.compareTo(id.get) was ${d.compareTo(id.get)} instead of 0. That's usually bad." +
-                                        s"\nThe offending dates are\nd =\t$d ${d.getTime}\nid.get =\t${id.get} ${id.get.getTime}")
+    def compareDate(dateStr: String) {
+      val toDateWithFormat = toOptDate(formatStr)
+      val dateFormatter = new java.text.SimpleDateFormat(formatStr)
+      val maybeDateFromStr = toDateWithFormat(dateStr)
+      assert(maybeDateFromStr.isDefined, s"maybeDateFromStr was None for ${dateStr}")
+      val dateFromStr = maybeDateFromStr.get
+      Console.println(dateStr)
+      assert(dateFormatter.format(dateFromStr) === dateStr)
     }
 
     /*
@@ -175,22 +174,15 @@ class CsvReaderSpec extends FlatSpec {
     val end = start (step * (num-1))
      */
 
-
     val numDates = 20
     val dates = (0 to numDates - 1).map { idx =>
       new Date(60l * 60l * 24l * 1000 * idx)
+    } map {
+      val dateFormatter = new java.text.SimpleDateFormat(formatStr)
+      dateFormatter.format(_)
     }
 
-    val (brokenOrLastDate, allDatesAfter) = dates.tail.foldLeft((dates.head, true)) {
-    /*
-     * if acc has a false in it, the Date in acc failed its elem.after(acc._1) and we just pass the acc along as is
-     * otherwise we give the next guy the current date and the result of comparing it with the previous one.
-     */
-      (acc, elem) => if(!acc._2) acc else (elem, elem.after(acc._1))
-    }
-    assert(allDatesAfter, s"!allDatesAfter, the Date that failed is $brokenOrLastDate")
     dates foreach compareDate
-    fail
   }
 
   /*  it should "should work in LIFO order" in new StackWithLen(2) {
