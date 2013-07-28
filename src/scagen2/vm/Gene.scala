@@ -7,4 +7,6 @@ class Gene(instructions: Seq[Operation]) {
     instructions foreach (_(stack))
     stack.pop()
   }
+
+  lazy val numInstructions = instructions.length
 }
