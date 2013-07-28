@@ -11,23 +11,24 @@ case class Header(text: String)
  * @param hasHeader
  */
 class CsvReader(src: Source, separator: Char) {
-  @inline private[this] def explodeStr(s: String): Seq[String] = {
-    s.split(separator).toSeq
+  private[this] val rawLineStream = {
+    def explodeStr(s: String): Seq[String] = {
+      s.split(separator).toSeq
+    }
+    src.getLines().toStream.map(explodeStr)
   }
-
-  private[this] val rawLineStream                   = src.getLines().toStream.map(explodeStr)
-  private[this] val rawLineStreamNoHeader           = rawLineStream.tail
+  private[this]      val rawLineStreamNoHeader            = rawLineStream.tail
   /**
    * Returns everything on the first row of the CSV file as a Header object.
    * @return The first row
    */
-  lazy          val header    : Seq[Header]         = {
-    rawLineStream.head.map(colName => Header(colName))
-  }
+  private[this] lazy val headerToIdxMap: Map[Header, Int] = header.zipWithIndex.toMap
+
+  lazy val header: Seq[Header] = rawLineStream.head.map(colName => Header(colName))
   /**
    * Simply all columns as Streams of Strings (both of which might be arbitrarily large)
    */
-  lazy          val rawColumns: Seq[Stream[String]] = {
+  lazy val rawColumns: Seq[Stream[String]] = {
     ???
   }
 
@@ -47,6 +48,7 @@ class CsvReader(src: Source, separator: Char) {
    * @return
    */
   def apply(header: Header): Stream[String] = {
-    ???
+    val colIdx = headerToIdxMap(header)
+    rawLineStreamNoHeader.map(column => column(colIdx))
   }
 }
