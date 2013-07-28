@@ -6,17 +6,17 @@ object InstructionTools {
    *
    */
   import SimpleStack.ItemType
-  import Instruction.OpType
+  import Instruction.Operation
   def pushGen(item: SimpleStack.ItemType): (SimpleStack) => Unit = (s: SimpleStack) => s.push(item)
 
-  def toOpType(f:(ItemType, ItemType) => ItemType): OpType = {
+  def toOpType(f:(ItemType, ItemType) => ItemType): Operation = {
     (s: SimpleStack) => s.push(f(s.pop(), s.pop()))
   }
 }
 
 object Instruction {
-  type OpType = (SimpleStack) => Unit
-  val binaryOps: Seq[OpType] = {
+  type Operation = (SimpleStack) => Unit
+  val binaryOps: Seq[Operation] = {
     import math._
     val selfDefined: Seq[(SimpleStack) => Unit] = Seq(add, sub, mul, div)
     val ops: Seq[(SimpleStack) => Unit] = Seq[(Double, Double) => Double](atan2, hypot, max, min, pow) map {
@@ -24,13 +24,13 @@ object Instruction {
     }
     selfDefined ++ ops
   }
-  val unaryOps : Seq[OpType] = {
+  val unaryOps : Seq[Operation] = {
     import math._
     Seq[(Double) => Double](abs, exp, log, sin, tan, cos, sinh, tanh, cosh, asin, atan, acos, exp, floor, ceil).map {
       op => (s: SimpleStack) => s.push(op(s.pop()))
     }
   }
-  val stackOps       : Seq[OpType] = Seq(
+  val stackOps       : Seq[Operation] = Seq(
                                           (s: SimpleStack) => s.drop()
                                           , (s: SimpleStack) => s.dup()
                                           , (s: SimpleStack) => s.over()
@@ -38,26 +38,26 @@ object Instruction {
                                           , (s: SimpleStack) => s.swap()
                                           , (s: SimpleStack) => s.clear()
                                         )
-  val allInstructions: Seq[OpType] = {
+  val allInstructions: Seq[Operation] = {
     binaryOps ++ unaryOps ++ stackOps
   }
   /**
    * A function that takes a stack `s` and does `s.push(s.pop() + s.pop())`. The type ''(SimpleStack) => ()''
-   * is assigned to `OpType` for brevity.
+   * is assigned to `Operation` for brevity.
    */
-  val add            : OpType      = (s: SimpleStack) => s.push(s.pop() + s.pop())
+  val add            : Operation      = (s: SimpleStack) => s.push(s.pop() + s.pop())
   /**
    * `s.push(s.pop() - s.pop())`
    */
-  val sub            : OpType      = (s: SimpleStack) => s.push(s.pop() - s.pop())
+  val sub            : Operation      = (s: SimpleStack) => s.push(s.pop() - s.pop())
   /**
    * `s.push(s.pop() * s.pop())`
    */
-  val mul            : OpType      = (s: SimpleStack) => s.push(s.pop() * s.pop())
+  val mul            : Operation      = (s: SimpleStack) => s.push(s.pop() * s.pop())
   /**
    * `s.push(s.pop() / s.pop())`
    */
-  val div            : OpType      = (s: SimpleStack) => s.push(s.pop() / s.pop())
+  val div            : Operation      = (s: SimpleStack) => s.push(s.pop() / s.pop())
   /*  /**
      * `s.push(math.abs(s.pop()))`
      */

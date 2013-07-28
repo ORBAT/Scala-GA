@@ -23,7 +23,7 @@ class GeneSpec extends FlatSpec {
   abstract class TestBinOpGene(opSymbol: String, op: (ItemType, ItemType) => ItemType) {
     val values = Seq(2.9, 4.7)
     assert(values.length > 1)
-    val pushes        : Seq[Instruction.OpType] = numbersToPushes(values)
+    val pushes        : Seq[Instruction.Operation] = numbersToPushes(values)
     val asOpType      : (SimpleStack) => Unit   = InstructionTools.toOpType(op)
     val expectedResult: ItemType                = {
       // keep only the two last pushed items.
