@@ -16,32 +16,29 @@ object InstructionTools {
 
 object Instruction {
   type OpType = (SimpleStack) => Unit
+  val binaryOps: Seq[OpType] = {
+    import math._
+    val selfDefined: Seq[(SimpleStack) => Unit] = Seq(add, sub, mul, div)
+    val ops: Seq[(SimpleStack) => Unit] = Seq[(Double, Double) => Double](atan2, hypot, max, min, pow) map {
+      op => (s: SimpleStack) => s.push(op(s.pop(), s.pop()))
+    }
+    selfDefined ++ ops
+  }
+  val unaryOps : Seq[OpType] = {
+    import math._
+    Seq[(Double) => Double](abs, exp, log, sin, tan, cos, sinh, tanh, cosh, asin, atan, acos, exp, floor, ceil).map {
+      op => (s: SimpleStack) => s.push(op(s.pop()))
+    }
+  }
+  val stackOps       : Seq[OpType] = Seq(
+                                          (s: SimpleStack) => s.drop()
+                                          , (s: SimpleStack) => s.dup()
+                                          , (s: SimpleStack) => s.over()
+                                          , (s: SimpleStack) => s.rot()
+                                          , (s: SimpleStack) => s.swap()
+                                          , (s: SimpleStack) => s.clear()
+                                        )
   val allInstructions: Seq[OpType] = {
-    import SimpleStack.ItemType
-    val binaryOps: Seq[OpType] = {
-      import math._
-      val selfDefined: Seq[(SimpleStack) => Unit] = Seq(add, sub, mul, div)
-      val ops: Seq[(SimpleStack) => Unit] = Seq[(Double, Double) => Double](atan2, hypot, max, min, pow) map {
-        op => (s: SimpleStack) => s.push(op(s.pop(), s.pop()))
-      }
-      selfDefined ++ ops
-    }
-    val unaryOps: Seq[OpType] = {
-      import math._
-      Seq[(Double) => Double](abs, exp, log, sin, tan, cos, sinh, tanh, cosh, asin, atan, acos, exp, floor, ceil).map {
-        op => (s: SimpleStack) => s.push(op(s.pop()))
-      }
-    }
-
-    val stackOps: Seq[OpType] = Seq(
-      (s: SimpleStack) => s.drop()
-      , (s: SimpleStack) => s.dup()
-    , (s: SimpleStack) => s.over()
-    , (s: SimpleStack) => s.rot()
-    , (s: SimpleStack) => s.swap()
-    , (s: SimpleStack) => s.clear()
-    )
-
     binaryOps ++ unaryOps ++ stackOps
   }
   /**
