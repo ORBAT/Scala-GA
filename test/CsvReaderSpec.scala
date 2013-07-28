@@ -134,14 +134,29 @@ class CsvReaderSpec extends FlatSpec {
         s"maxdDiff being $maxdDiff")
     }
 
+    val maxDoubles = 40
+    1 to maxDoubles map {
+      val min = -10d
+      val max = 10d
+      val step = (max - min) / maxDoubles
+      x => min + (step * x)
+    } map compareDouble
+
+
+
     def compareInt(i: Int) {
       val id = toOptInt(i.toString)
       assert(id.isDefined, s"Trying to convert $i to Option[Int] got us a None. That's usually bad.")
       val idiff = math.abs(id.get - i)
-      val maxiDiff = 1
-      assert(idiff < maxiDiff, s"Converting $i to Option[Int] got us Some(${id.get}). The difference is $idiff, with " +
-                               s"maxiDiff being $maxiDiff")
+      assert(idiff === 0, s"Converting $i to Option[Int] got us Some(${id.get}). The difference is $idiff when it " +
+                         s"should be 0")
     }
+
+    -20 to 20 map compareInt
+
+
+
+
 
     val formatStr = "yyyy-MM-dd"
     val toDateWithFormat = toOptDate(formatStr)
@@ -149,7 +164,8 @@ class CsvReaderSpec extends FlatSpec {
     def compareDate(d:Date) {
       val id = toDateWithFormat(dateFormatter.format(d))
       assert(id.isDefined, s"Trying to convert ${dateFormatter.format(d)} to Option[Date] got us a None. That's usually bad.")
-      assert(d.compareTo(id.get) === 0, s"d.compareTo(id.get) was ${d.compareTo(id.get)} instead of 0. That's usually bad.")
+      assert(d.compareTo(id.get) === 0, s"d.compareTo(id.get) was ${d.compareTo(id.get)} instead of 0. That's usually bad." +
+                                        s"\nThe offending dates are\nd =\t$d ${d.getTime}\nid.get =\t${id.get} ${id.get.getTime}")
     }
 
     /*
@@ -160,12 +176,9 @@ class CsvReaderSpec extends FlatSpec {
      */
 
 
-    val startInMillis = 946684800l * 1000l
-    val stepInMillis = 60l * 60l * 24l * 1000l
     val numDates = 20
-    val endInMillis = startInMillis + stepInMillis * (numDates - 1)
     val dates = (0 to numDates - 1).map { idx =>
-      new Date(startInMillis + idx * stepInMillis)
+      new Date(60l * 60l * 24l * 1000 * idx)
     }
 
     val (brokenOrLastDate, allDatesAfter) = dates.tail.foldLeft((dates.head, true)) {
@@ -176,8 +189,8 @@ class CsvReaderSpec extends FlatSpec {
       (acc, elem) => if(!acc._2) acc else (elem, elem.after(acc._1))
     }
     assert(allDatesAfter, s"!allDatesAfter, the Date that failed is $brokenOrLastDate")
+    dates foreach compareDate
     fail
-
   }
 
   /*  it should "should work in LIFO order" in new StackWithLen(2) {
