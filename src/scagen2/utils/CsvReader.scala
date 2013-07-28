@@ -10,23 +10,26 @@ case class Header(text: String)
  * @param separator
  * @param hasHeader
  */
-class CsvReader(src: Source, separator: Char, hasHeader: Boolean = true) {
+class CsvReader(src: Source, separator: Char) {
+  @inline private[this] def explodeStr(s: String): Seq[String] = {
+    s.split(separator).toSeq
+  }
 
-  private[this] val srcStream                          = src.getLines().toStream
+  private[this] val rawLineStream                   = src.getLines().toStream.map(explodeStr)
+  private[this] val rawLineStreamNoHeader           = rawLineStream.tail
   /**
    * Returns everything on the first row of the CSV file as a Header object.
    * @return The first row
    */
-  lazy          val header    : Seq[Header]            = {
-    if(hasHeader)
-      srcStream.head.split(separator).toSeq.map(colName => Header(colName))
-    else
-      Seq()
+  lazy          val header    : Seq[Header]         = {
+    rawLineStream.head.map(colName => Header(colName))
   }
   /**
    * Simply all columns as Streams of Strings (both of which might be arbitrarily large)
    */
-  lazy          val rawColumns: Stream[Stream[String]] = ???
+  lazy          val rawColumns: Seq[Stream[String]] = {
+    ???
+  }
 
   /**
    * Returns a Stream that contains every element in the column with index `colIdx`. The stream should not be infinite,
@@ -34,12 +37,16 @@ class CsvReader(src: Source, separator: Char, hasHeader: Boolean = true) {
    * @param colIdx Get the data for the column with this index, e.g. 0 would be the first column of the data.
    * @return A Stream that contains the specified column
    */
-  def apply(colIdx: Int): Stream[String] = ???
+  def apply(colIdx: Int): Stream[String] = {
+    rawLineStreamNoHeader.map(column => column(colIdx))
+  }
 
   /**
    * Returns a Stream that contains the data for the given Header object.
    * @param header
    * @return
    */
-  def apply(header: Header): Stream[String] = ???
+  def apply(header: Header): Stream[String] = {
+    ???
+  }
 }

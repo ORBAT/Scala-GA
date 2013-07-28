@@ -91,9 +91,6 @@ class CsvReaderSpec extends FlatSpec {
   }
 
   it should "give correct columns after using apply(Int) multiple times" in new TestMaterialReader {
-
-
-
     def giveColStream() = (0 to headerObjects.length - 1) map {
       headIdx => csvReader(headIdx)
     }
