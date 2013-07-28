@@ -7,6 +7,7 @@ import scala.annotation.tailrec
 class GeneSpec extends FlatSpec {
 
   import InstructionTools.binaryFns
+  import Instruction.BinFn
   import SimpleStack.ItemType
 
   def numbersToPushes(values: Seq[ItemType]): Seq[Instruction.Operation] = {
@@ -64,7 +65,7 @@ class GeneSpec extends FlatSpec {
   it should "handle all simple binary ops during execute()" in new {
     binaryFns.foreach(tuple =>
       new TestBinOpGene(tuple._1, tuple._2) {
-        val execute = gene.execute()
+        val execute = gene.execute
         val absDiff = math.abs(execute - expectedResult)
         assert(absDiff < maxTolerance, s"BinOpGene returned ${execute}, diff to expected result (${expectedResult}) " +
                                        s"was ${absDiff}")
@@ -75,6 +76,7 @@ class GeneSpec extends FlatSpec {
 
     import Instruction.Operation
 
+
     val step        : ItemType                             = 1d
     val steppedItems: Stream[ItemType]                     = Stream.iterate(1d)(_ + step)
     val selectedOps                                        = binaryFns.reverse.toList
@@ -83,36 +85,37 @@ class GeneSpec extends FlatSpec {
       val values: Iterator[ItemType] = steppedItems.toIterator
       import SimpleStack.ItemType
       import InstructionTools._
-      def funToPushAndOp(value: ItemType, x: BinFn): Seq[Operation] = {
-        Seq(pushGen(value), toOpType(x))
+      def funToPushAndOp(value: ItemType, x: Instruction): Seq[Instruction] = {
+        Seq(pushGen(value), x)
       }
 
 
       /**
        * Takes all binary operations in `ops`
-       * @param ops a list of tuples, all containing a function's "symbol" and the function itself
+       * @param ops The list of Instructions which we will use
        * @param instrAccum an accumulator for Operations
        * @param strAccum accumulator for the string representation
        * @return
        */
-      @tailrec def genOperations(ops: List[(String, BinFn)]
-                                 , instrAccum: List[Operation]
-                                 , strAccum: String): (String, List[Operation]) = ops match {
-        case (symbol, op) :: rest => {
+      @tailrec def genOperations(ops: List[Instruction]
+                                 , instrAccum: List[Instruction]
+                                 , strAccum: String): (String, List[Instruction]) = ops match {
+        case (ins@Instruction(symbol,op)) :: rest => {
           val nextVal = values.next()
           //          println(s"genOperations loop\n\tpush($nextVal)\n\t$symbol")
-          genOperations(rest, instrAccum ++ funToPushAndOp(nextVal, op), s"${strAccum} $nextVal $symbol")
+          genOperations(rest, instrAccum ++ funToPushAndOp(nextVal, ins), s"${strAccum} $nextVal $symbol")
         }
         case _ => (strAccum, instrAccum)
       }
 
       val firstValue = values.next()
-      val (stringRep, ops) = genOperations(selectedOps, List(), s"$firstValue")
+      val (stringRep, ops) = genOperations(selectedOps map (InstructionTools.toInstruction(_)), List(), s"$firstValue")
       (stringRep, pushGen(firstValue) :: ops)
 
     }
     val g                                                  = new Gene(chainedOps)
-    val geneResult                                         = g.execute()
+    println(s"Gene.toString = ${g.toString}")
+    val geneResult                                         = g.execute
     val (secondOpinionStr, secondOpinion)                  = giveResult(steppedItems, selectedOps)
     /*    println(s"RPN $opsAsString -->\nNOR $secondOpinionStr -->\n\tgeneResult = $geneResult" +
                 s"\n\tsecondOpinion = $secondOpinion\n")*/
@@ -123,18 +126,18 @@ class GeneSpec extends FlatSpec {
 
   it should "execute() slightly more sophisticated genes" in new {
     val oneByTwo = Seq(pushGen(2d), pushGen(1d), Instruction.div)
-    assert(new Gene(oneByTwo).execute() === 0.5, "first")
-    assert(new Gene(oneByTwo ++ Seq(pushGen(3d), Instruction.mul)).execute() === 1.5, "second")
-    assert(new Gene(Seq(pushGen(2d), pushGen(1d), Instruction.div, pushGen(3d), Instruction.mul)).execute() === 1.5,
+    assert(new Gene(oneByTwo).execute === 0.5, "first")
+    assert(new Gene(oneByTwo ++ Seq(pushGen(3d), Instruction.mul)).execute === 1.5, "second")
+    assert(new Gene(Seq(pushGen(2d), pushGen(1d), Instruction.div, pushGen(3d), Instruction.mul)).execute === 1.5,
             "third")
     assert(new Gene(Seq(pushGen(1d), pushGen(2d), Instruction.div
                          , pushGen(3d), Instruction.mul, pushGen(4d), Instruction.sub, pushGen(5d)
-                         , Instruction.add)).execute() === 3, "fourth")
+                         , Instruction.add)).execute === 3, "fourth")
 
   }
 
   it should "execute() when doing simple division" in new TestBinOpGene(" / ", _ / _) {
-    val execute = gene.execute()
+    val execute = gene.execute
     val absDiff = math.abs(execute - expectedResult)
     assert(absDiff < maxTolerance, s"Gene returned ${execute}, diff to expected result (${expectedResult}) " +
                                    s"was ${absDiff}")
