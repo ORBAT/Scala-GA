@@ -1,4 +1,5 @@
 import java.io.File
+import java.util.Date
 import org.scalatest.FlatSpec
 import scagen2.utils._
 import scala.collection.immutable
@@ -8,7 +9,7 @@ class CsvReaderSpec extends FlatSpec {
 
   trait TestMaterialReader {
     private implicit val codec = Codec.UTF8
-    private[this] val testMaterialRows = 20000
+    private val testMaterialRows = 20000
     private[this] val headerMaxChar: Char = ('A'.toInt + 3).toChar
     /**
      * Test header
@@ -111,10 +112,85 @@ class CsvReaderSpec extends FlatSpec {
     checkColumnStreams(columnStreams)
   }
 
+
+  it should "return columns with mapping applied" in new TestMaterialReader {
+    val mappedToOptInts = csvReader.columnMap(0, CsvReader.toOptInt _)
+    // flatten Stream[Option[Int]] into Stream[Int], then turn everything back into string
+    val stringsFromInts = mappedToOptInts.flatten.map(_.toString)
+    assert(stringsFromInts.length === csvReader(0).length, s"stringsFromInts.length (${stringsFromInts.length}) === csvReader(0).length ${} didn't work " +
+                                                           s"out for you.")
+    val zipped: Stream[(String, String)] = stringsFromInts.zip(csvReader(0))
+    zipped.foreach(pair => assert(pair._1 === pair._2))
+  }
+
+  it should "provide a few correct default mappers" in new {
+
+    import CsvReader._
+
+    def compareDouble(d: Double) {
+      def fmt(d: Double) = d.formatted("%.2g")
+      val od = toOptDouble(fmt(d))
+      assert(od.isDefined, s"Trying to convert ${fmt(d)} to Option[Double] got us a None. That's usually bad.")
+      val ddiff = math.abs(od.get - d)
+      val maxdDiff = 0.0000001
+      assert(
+        ddiff < maxdDiff,
+        s"Converting ${fmt(d)} to Option[Double] got us Some(${od.get}). The difference is $ddiff, with " +
+        s"maxdDiff being $maxdDiff")
+    }
+
+    val maxDoubles = 40
+    1 to maxDoubles map {
+      val min = -10d
+      val max = 10d
+      val step = (max - min) / maxDoubles
+      x => min + (step * x)
+    } foreach compareDouble
+
+
+
+    def compareInt(i: Int) {
+      val id = toOptInt(i.toString)
+      assert(id.isDefined, s"Trying to convert $i to Option[Int] got us a None. That's usually bad.")
+      val idiff = math.abs(id.get - i)
+      assert(idiff === 0, s"Converting $i to Option[Int] got us Some(${id.get}). The difference is $idiff when it " +
+                         s"should be 0")
+    }
+
+    -20 to 20 foreach compareInt
+
+    val formatStr = "yyyy-MM-dd"
+    def compareDate(dateStr: String) {
+      // toOptDate returns a function that turns anything in the same format as formatStr into a Option[Date].
+      val toDateWithFormat = toOptDate(formatStr)
+      val dateFormatter = new java.text.SimpleDateFormat(formatStr)
+      val maybeDateFromStr = toDateWithFormat(dateStr)
+      assert(maybeDateFromStr.isDefined, s"maybeDateFromStr was None for ${dateStr}")
+      val dateFromStr = maybeDateFromStr.get
+      Console.println(dateStr)
+      assert(dateFormatter.format(dateFromStr) === dateStr)
+    }
+
+    /*
+    val start = 100
+    val num = 3
+    val step = 1
+    val end = start (step * (num-1))
+     */
+
+    val numDates = 20
+
+    (0 to numDates - 1).map { idx =>
+      new Date(60l * 60l * 24l * 1000 * idx)
+    } map {
+      val dateFormatter = new java.text.SimpleDateFormat(formatStr)
+      dateFormatter.format(_)
+    } foreach compareDate
+  }
+
   /*  it should "should work in LIFO order" in new StackWithLen(2) {
       assert(stack.pop() === 2)
       assert(stack.pop() === 1)
       assert(stack.pop().isNaN)
     }*/
-
 }
