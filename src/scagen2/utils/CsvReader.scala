@@ -59,12 +59,12 @@ class CsvReader(src: Source, separator: Char = ',') {
    * @return The first row
    */
   private[this] lazy val headerToIdxMap: Map[ColumnMetadata, Int] = header.zipWithIndex.toMap
-  lazy val header: Seq[ColumnMetadata] = rawLineStream.head.map(colName =>
+   val header: Seq[ColumnMetadata] = rawLineStream.head.map(colName =>
     ColumnMetadata(colName))
   /**
-   * Simply all columns as Streams of Strings (both of which might be arbitrarily large)
+   * A stream of all columns. Each element is a column stream, and there may be arbitrarily many elements
    */
-  lazy val rawColumns: Seq[Stream[String]] = header.map(col => this(col))
+  lazy val rawColumns: Stream[Stream[String]] = header.map(col => this(col))(collection.breakOut)
 
   /**
    * Returns a Stream that contains every element in the column with index `colIdx`. The stream should not be infinite,
