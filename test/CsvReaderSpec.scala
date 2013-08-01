@@ -113,7 +113,7 @@ class CsvReaderSpec extends FlatSpec {
   }
 
 
-  it should "return columns with filters applied" in new TestMaterialReader {
+  it should "return columns with mapping applied" in new TestMaterialReader {
     val mappedToOptInts = csvReader.columnMap(0, CsvReader.toOptInt _)
     // flatten Stream[Option[Int]] into Stream[Int], then turn everything back into string
     val stringsFromInts = mappedToOptInts.flatten.map(_.toString)
@@ -123,7 +123,7 @@ class CsvReaderSpec extends FlatSpec {
     zipped.foreach(pair => assert(pair._1 === pair._2))
   }
 
-  it should "provide a few correct default filters" in new {
+  it should "provide a few correct default mappers" in new {
 
     import CsvReader._
 
