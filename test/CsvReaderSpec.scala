@@ -114,12 +114,13 @@ class CsvReaderSpec extends FlatSpec {
 
 
   it should "return columns with filters applied" in new TestMaterialReader {
-    val mappedToOptInts = csvReader.columnMap(0, CsvReader.toOptInt)
+    val mappedToOptInts = csvReader.columnMap(0, CsvReader.toOptInt _)
     // flatten Stream[Option[Int]] into Stream[Int], then turn everything back into string
     val stringsFromInts = mappedToOptInts.flatten.map(_.toString)
     assert(stringsFromInts.length === csvReader(0).length, s"stringsFromInts.length (${stringsFromInts.length}) === csvReader(0).length ${} didn't work " +
                                                            s"out for you.")
-    fail
+    val zipped: Stream[(String, String)] = stringsFromInts.zip(csvReader(0))
+    zipped.foreach(pair => assert(pair._1 === pair._2))
   }
 
   it should "provide a few correct default filters" in new {
@@ -158,10 +159,9 @@ class CsvReaderSpec extends FlatSpec {
 
     -20 to 20 foreach compareInt
 
-
-
     val formatStr = "yyyy-MM-dd"
     def compareDate(dateStr: String) {
+      // toOptDate returns a function that turns anything in the same format as formatStr into a Option[Date].
       val toDateWithFormat = toOptDate(formatStr)
       val dateFormatter = new java.text.SimpleDateFormat(formatStr)
       val maybeDateFromStr = toDateWithFormat(dateStr)
@@ -179,14 +179,13 @@ class CsvReaderSpec extends FlatSpec {
      */
 
     val numDates = 20
-    val dates = (0 to numDates - 1).map { idx =>
+
+    (0 to numDates - 1).map { idx =>
       new Date(60l * 60l * 24l * 1000 * idx)
     } map {
       val dateFormatter = new java.text.SimpleDateFormat(formatStr)
       dateFormatter.format(_)
-    }
-
-    dates foreach compareDate
+    } foreach compareDate
   }
 
   /*  it should "should work in LIFO order" in new StackWithLen(2) {

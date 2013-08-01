@@ -1,33 +1,31 @@
 package scagen2.utils
 
 import scala.io.Source
+import java.util.Date
 
 case class ColumnMetadata(text: String)
 
 object CsvReader {
-  val toOptInt: (String) => Option[Int] =
-    (s: String) =>
-      try
-        Some(java.lang.Integer.parseInt(s))
+
+  def toOptInt(s: String): Option[Int] =
+      try Some(java.lang.Integer.parseInt(s))
       catch {
         case _: Throwable => None
       }
-  val toOptDouble: (String) => Option[Double] =
-    (s: String) =>
+
+  def toOptDouble(s: String): Option[Double] =
       try Some(java.lang.Double.parseDouble(s))
       catch {
         case _: Throwable => None
       }
 
-  def toOptDate(formatString: String) = {
+  def toOptDate(formatString: String): (String) => Option[Date] = {
     val format = new java.text.SimpleDateFormat(formatString)
-    (dateStr: String) => {
-      try
-        Some(format.parse(dateStr))
+    (dateStr: String) =>
+      try Some(format.parse(dateStr))
       catch {
         case _: Throwable => None
       }
-    }
   }
 
 }
