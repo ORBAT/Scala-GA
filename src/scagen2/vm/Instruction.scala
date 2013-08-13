@@ -52,12 +52,12 @@ object Instruction {
 }
 
 /**
- * Instructions are the smallest executable building block in Scagen2. Instructions are basically
- * comprised of an Operation and a String symbol representation.
+ * Instructions are the smallest executable building block in Scagen2. Instructions are comprised of an `Operation`
+ * and a String symbol representation of the operation.
  *
  * They have no state themselves, but they rely on
  * SimpleStack to be mutable as seen in `Instruction.apply(SimpleStack)`
- * @param fn A function that takes a `SimpleStack` and does something that has side effects. For example
+ * @param fn A function with the signature `(SimpleStack) => Unit`  that takes a `SimpleStack` and does something that has side effects. For example
  *           `(s: SimpleStack) => s.push(s.pop() * 2)` is a valid Operation
  * @param instructionSymbol
  */
@@ -101,18 +101,5 @@ object InstructionTools {
       s.push(f(a, b))
     }
   }
-
-  val basicMathFns: Seq[(String, BinFn)] = Seq(("+", _ + _)
-                                                , ("-", _ - _)
-                                                , ("*", _ * _)
-                                                , ("/", _ / _))
-
-  val advMathFns: Seq[(String, BinFn)] = Seq(("atan2", math.atan2 _)
-                                              , ("hypot", math.hypot _)
-                                              , ("max", math.max _)
-                                              , ("min", math.min _)
-                                              , ("pow", math.pow _))
-  val binaryFns: Seq[(String, BinFn)] = (basicMathFns ++ advMathFns)
-  val binaryInstructions = binaryFns.map(toInstruction(_))
 
 }
