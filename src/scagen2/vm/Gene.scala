@@ -2,7 +2,7 @@ package scagen2.vm
 
 import Instruction.Operation
 
-class Gene(instructions: Seq[Operation]) {
+class Gene(instructions: Seq[Instruction]) {
 
   lazy val execute = {
     val stack = new SimpleStack

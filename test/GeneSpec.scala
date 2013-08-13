@@ -10,7 +10,7 @@ class GeneSpec extends FlatSpec {
   import Instruction.BinFn
   import SimpleStack.ItemType
 
-  def numbersToPushes(values: Seq[ItemType]): Seq[Instruction.Operation] = {
+  def numbersToPushes(values: Seq[ItemType]): Seq[Instruction] = {
     values map { value => InstructionTools.pushGen(value) }
   }
 
@@ -47,8 +47,8 @@ class GeneSpec extends FlatSpec {
   abstract class TestBinOpGene(opSymbol: String, op: (ItemType, ItemType) => ItemType) {
     val values = Seq(2.9, 4.7)
     assert(values.length > 1)
-    val pushes        : Seq[Instruction.Operation] = numbersToPushes(values)
-    val asOpType      : (SimpleStack) => Unit      = InstructionTools.toOpType(op)
+    val pushes        : Seq[Instruction] = numbersToPushes(values)
+    val asInstruction      : Instruction      = InstructionTools.toInstruction(opSymbol, op)
     val expectedResult: ItemType                   = {
       // keep only the two last pushed items.
       val lastTwo = values.drop(values.length - 2).reverse
@@ -56,7 +56,7 @@ class GeneSpec extends FlatSpec {
       //      println(s"lastTwo ${lastTwo.mkString(", ")}\n${lastTwo(0) }${opSymbol }${lastTwo(1)} = ${res}")
       res
     }
-    val gene                                       = new Gene(pushes :+ asOpType)
+    val gene                                       = new Gene(pushes :+ asInstruction)
     val maxTolerance                               = 0.001
   }
 
@@ -81,7 +81,7 @@ class GeneSpec extends FlatSpec {
     val steppedItems: Stream[ItemType]                     = Stream.iterate(1d)(_ + step)
     val selectedOps                                        = binaryFns.reverse.toList
     // TODO: create instructions to the tune of 2 4 + 6 - 8 * 10 /
-    val (opsAsString: String, chainedOps: List[Operation]) = {
+    val (opsAsString: String, chainedOps: List[Instruction]) = {
       val values: Iterator[ItemType] = steppedItems.toIterator
       import SimpleStack.ItemType
       import InstructionTools._
