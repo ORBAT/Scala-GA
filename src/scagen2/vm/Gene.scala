@@ -5,9 +5,7 @@ import Instruction.Operation
 class Gene(instructions: Seq[Instruction]) {
 
   lazy val execute = {
-    val stack = new SimpleStack
-    instructions foreach (_(stack))
-    stack.pop()
+    new Context(instructions).execute()
   }
 
   lazy          val numInstructions = instructions.length

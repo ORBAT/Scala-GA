@@ -1,7 +1,14 @@
 package scagen2.vm
 
-class Context(instructions:Nothing) {
-  private[this] var _ip: Int = ???
+import scagen2.vm.SimpleStack.ItemType
+
+class Context(instructions:Seq[Instruction]) {
+  val stack = new SimpleStack
+  def execute():ItemType = {
+    instructions.foreach(_(this))
+    stack.pop()
+  }
+  private[this] var _ip: Int = _
   def ip: Int = ???
   def ++ {???}
   def -- {???}

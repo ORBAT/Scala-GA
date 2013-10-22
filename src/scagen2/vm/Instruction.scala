@@ -6,7 +6,7 @@ object Instruction {
   type NullaryFn = () => ItemType
   type UnaryFm = (ItemType) => ItemType
   type BinFn = (ItemType, ItemType) => ItemType
-  type Operation = (SimpleStack) => Unit
+  type Operation = (Context) => Unit
 
   def unapply(i: Instruction): Option[(String, Operation)] = {
     Some((i.symbol, i.function))
@@ -65,7 +65,7 @@ class Instruction(instructionSymbol: String, fn: Instruction.Operation) {
   val symbol   = instructionSymbol
   val function = fn
 
-  def apply(v1: SimpleStack) {
+  def apply(v1: Context) {
     fn(v1)
   }
 
@@ -80,7 +80,7 @@ object InstructionTools {
   import Instruction.{Operation, NullaryFn, UnaryFm, BinFn}
 
   def pushGen(item: SimpleStack.ItemType): Instruction =
-    new Instruction(item.formatted("%.4g"), (s: SimpleStack) => s.push(item))
+    new Instruction(item.formatted("%.4g"), (c: Context) => c.stack.push(item))
 
   def toInstruction(tup: (String, BinFn)): Instruction = {
     toInstruction(tup._1, tup._2)
@@ -95,7 +95,8 @@ object InstructionTools {
    *
    */
   def toOpType(f: BinFn): Operation = {
-    (s: SimpleStack) => {
+    (c: Context) => {
+      val s = c.stack
       val a = s.pop()
       val b = s.pop()
       s.push(f(a, b))
