@@ -6,9 +6,21 @@ import scala.annotation.tailrec
 
 class GeneSpec extends FlatSpec {
 
-  import InstructionTools.binaryFns
   import Instruction.BinFn
   import SimpleStack.ItemType
+
+  val basicMathFns: Seq[(String, BinFn)] = Seq(("+", _ + _)
+    , ("-", _ - _)
+    , ("*", _ * _)
+    , ("/", _ / _))
+
+  val advMathFns: Seq[(String, BinFn)] = Seq(("atan2", math.atan2 _)
+    , ("hypot", math.hypot _)
+    , ("max", math.max _)
+    , ("min", math.min _)
+    , ("pow", math.pow _))
+  val binaryFns: Seq[(String, BinFn)] = (basicMathFns ++ advMathFns)
+  val binaryInstructions = binaryFns.map(toInstruction(_))
 
   def numbersToPushes(values: Seq[ItemType]): Seq[Instruction] = {
     values map { value => InstructionTools.pushGen(value) }
@@ -63,6 +75,8 @@ class GeneSpec extends FlatSpec {
   behavior of "A Gene"
 
   it should "handle all simple binary ops during execute()" in new {
+
+
     binaryFns.foreach(tuple =>
       new TestBinOpGene(tuple._1, tuple._2) {
         val execute = gene.execute
@@ -80,7 +94,6 @@ class GeneSpec extends FlatSpec {
     val step        : ItemType                             = 1d
     val steppedItems: Stream[ItemType]                     = Stream.iterate(1d)(_ + step)
     val selectedOps                                        = binaryFns.reverse.toList
-    // TODO: create instructions to the tune of 2 4 + 6 - 8 * 10 /
     val (opsAsString: String, chainedOps: List[Instruction]) = {
       val values: Iterator[ItemType] = steppedItems.toIterator
       import SimpleStack.ItemType

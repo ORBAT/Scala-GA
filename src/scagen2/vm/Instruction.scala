@@ -6,7 +6,7 @@ object Instruction {
   type NullaryFn = () => ItemType
   type UnaryFm = (ItemType) => ItemType
   type BinFn = (ItemType, ItemType) => ItemType
-  type Operation = (SimpleStack) => Unit
+  type Operation = (Context) => Unit
 
   def unapply(i: Instruction): Option[(String, Operation)] = {
     Some((i.symbol, i.function))
@@ -49,28 +49,54 @@ object Instruction {
      * `s.push(math.tans.pop()))`
      */
     val tan = (s: SimpleStack) => s.push(math.tan(s.pop()))*/
+
+  private[this] def sipImpl(c:Context) {
+    val stack: SimpleStack = c.stack
+    val b = stack.pop()
+    val a = stack.pop()
+    if(b > 0)
+      c.skip(a.asInstanceOf[Int])
+  }
+
+  private[this] def sinImpl(c:Context) {
+    val stack: SimpleStack = c.stack
+    val b = stack.pop()
+    val a = stack.pop()
+    if(b < 0)
+      c.skip(a.asInstanceOf[Int])
+  }
+
+  
+  /**
+   * Pops two values from the stack ( a b -- ), if `b` (i.e. the value last pushed) is >= 0 then skips `a`
+   * instructions
+   */
+  val skipIfGTE0: Instruction = new Instruction("SIG", sipImpl)
+  /**
+   * Pops two values from the stack ( a b -- ), if `b` (i.e. the value last pushed) is < 0 then skips `a`
+   * instructions
+   */
+  val skipIfLT0: Instruction = new Instruction("SIL", sinImpl)
+
 }
 
 /**
- * Instructions are the smallest executable building block in Scagen2. Instructions are basically
- * comprised of an Operation and a String symbol representation.
+ * Instructions are the smallest executable building block in Scagen2. Instructions are comprised of an `Operation`
+ * and a String symbol representation of the operation.
  *
  * They have no state themselves, but they rely on
  * SimpleStack to be mutable as seen in `Instruction.apply(SimpleStack)`
- * @param fn A function that takes a `SimpleStack` and does something that has side effects. For example
- *           `(s: SimpleStack) => s.push(s.pop() * 2)` is a valid Operation
- * @param instructionSymbol
+ * @param function A function that uses a [[scagen2.vm.Context]] to do calculations. See [[scagen2.vm.InstructionTools]] for some examples.
+ * @param symbol The symbol for this Instruction.
  */
-class Instruction(instructionSymbol: String, fn: Instruction.Operation) {
-  val symbol   = instructionSymbol
-  val function = fn
+class Instruction(val symbol: String, val function: Instruction.Operation) {
 
-  def apply(v1: SimpleStack) {
-    fn(v1)
+  def apply(v1: Context) {
+    function(v1)
   }
 
-  override def toString() = {
-    instructionSymbol
+  override def toString = {
+    symbol
   }
 }
 
@@ -80,7 +106,7 @@ object InstructionTools {
   import Instruction.{Operation, NullaryFn, UnaryFm, BinFn}
 
   def pushGen(item: SimpleStack.ItemType): Instruction =
-    new Instruction(item.formatted("%.4g"), (s: SimpleStack) => s.push(item))
+    new Instruction(item.formatted("%.4g"), (c: Context) => c.stack.push(item))
 
   def toInstruction(tup: (String, BinFn)): Instruction = {
     toInstruction(tup._1, tup._2)
@@ -95,24 +121,12 @@ object InstructionTools {
    *
    */
   def toOpType(f: BinFn): Operation = {
-    (s: SimpleStack) => {
+    (c: Context) => {
+      val s = c.stack
       val a = s.pop()
       val b = s.pop()
       s.push(f(a, b))
     }
   }
-
-  val basicMathFns: Seq[(String, BinFn)] = Seq(("+", _ + _)
-                                                , ("-", _ - _)
-                                                , ("*", _ * _)
-                                                , ("/", _ / _))
-
-  val advMathFns: Seq[(String, BinFn)] = Seq(("atan2", math.atan2 _)
-                                              , ("hypot", math.hypot _)
-                                              , ("max", math.max _)
-                                              , ("min", math.min _)
-                                              , ("pow", math.pow _))
-  val binaryFns: Seq[(String, BinFn)] = (basicMathFns ++ advMathFns)
-  val binaryInstructions = binaryFns.map(toInstruction(_))
 
 }
