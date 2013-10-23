@@ -5,7 +5,11 @@ class ContextSpec extends FlatSpec {
 
   behavior of "A Gene with Context"
 
-  it should "Support JNZ" in {
+  it should "support Skip If Nonzero" in {
+    fail
+  }
+
+  it should "support Skip If Zero" in {
     fail
   }
 

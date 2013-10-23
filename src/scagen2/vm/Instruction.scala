@@ -57,20 +57,17 @@ object Instruction {
  *
  * They have no state themselves, but they rely on
  * SimpleStack to be mutable as seen in `Instruction.apply(SimpleStack)`
- * @param fn A function with the signature `(SimpleStack) => Unit`  that takes a `SimpleStack` and does something that has side effects. For example
- *           `(s: SimpleStack) => s.push(s.pop() * 2)` is a valid Operation
- * @param instructionSymbol
+ * @param function A function that uses a [[scagen2.vm.Context]] to do calculations. See [[scagen2.vm.InstructionTools]] for some examples.
+ * @param symbol The symbol for this Instruction.
  */
-class Instruction(instructionSymbol: String, fn: Instruction.Operation) {
-  val symbol   = instructionSymbol
-  val function = fn
+class Instruction(val symbol: String, val function: Instruction.Operation) {
 
   def apply(v1: Context) {
-    fn(v1)
+    function(v1)
   }
 
-  override def toString() = {
-    instructionSymbol
+  override def toString = {
+    symbol
   }
 }
 
