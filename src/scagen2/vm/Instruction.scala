@@ -49,6 +49,35 @@ object Instruction {
      * `s.push(math.tans.pop()))`
      */
     val tan = (s: SimpleStack) => s.push(math.tan(s.pop()))*/
+
+  private[this] def sipImpl(c:Context) {
+    val stack: SimpleStack = c.stack
+    val b = stack.pop()
+    val a = stack.pop()
+    if(b > 0)
+      c.skip(a.asInstanceOf[Int])
+  }
+
+  private[this] def sinImpl(c:Context) {
+    val stack: SimpleStack = c.stack
+    val b = stack.pop()
+    val a = stack.pop()
+    if(b < 0)
+      c.skip(a.asInstanceOf[Int])
+  }
+
+  
+  /**
+   * Pops two values from the stack ( a b -- ), if `b` (i.e. the value last pushed) is >= 0 then skips `a`
+   * instructions
+   */
+  val skipIfGTE0: Instruction = new Instruction("SIG", sipImpl)
+  /**
+   * Pops two values from the stack ( a b -- ), if `b` (i.e. the value last pushed) is < 0 then skips `a`
+   * instructions
+   */
+  val skipIfLT0: Instruction = new Instruction("SIL", sinImpl)
+
 }
 
 /**
