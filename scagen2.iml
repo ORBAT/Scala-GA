@@ -22,8 +22,9 @@
     <orderEntry type="inheritedJdk" />
     <orderEntry type="sourceFolder" forTests="false" />
     <orderEntry type="library" name="scala-compiler-2.10.1" level="application" />
-    <orderEntry type="library" name="scalatest" level="application" />
     <orderEntry type="library" name="scala-library-2.10.1" level="application" />
+    <orderEntry type="library" name="scala-library-2.10.3" level="application" />
+    <orderEntry type="library" name="scalatest" level="application" />
   </component>
 </module>
 
