@@ -16,19 +16,19 @@ object Instruction {
    * A function that takes a stack `s` and does `s.push(s.pop() + s.pop())`. The type ''(SimpleStack) => Unit''
    * is assigned to `Operation` for brevity.
    */
-  val add: Instruction = InstructionTools.toInstruction("+", _ + _)
+  val add = InstructionTools.toInstruction("+", _ + _)
   /**
    * `s.push(s.pop() - s.pop())`
    */
-  val sub: Instruction = InstructionTools.toInstruction("-", _ - _)
+  val sub = InstructionTools.toInstruction("-", _ - _)
   /**
    * `s.push(s.pop() * s.pop())`
    */
-  val mul: Instruction = InstructionTools.toInstruction("*", _ * _)
+  val mul = InstructionTools.toInstruction("*", _ * _)
   /**
    * `s.push(s.pop() / s.pop())`
    */
-  val div: Instruction = InstructionTools.toInstruction("/", _ / _)
+  val div = InstructionTools.toInstruction("/", _ / _)
   /*  /**
      * `s.push(math.abs(s.pop()))`
      */
@@ -71,12 +71,12 @@ object Instruction {
    * Pops two values from the stack ( a b -- ), if `b` (i.e. the value last pushed) is >= 0 then skips `a`
    * instructions
    */
-  val skipIfGTE0: Instruction = new Instruction("SIG", sipImpl)
+  val skipIfGTE0 = new Instruction("SIG", sipImpl)
   /**
    * Pops two values from the stack ( a b -- ), if `b` (i.e. the value last pushed) is < 0 then skips `a`
    * instructions
    */
-  val skipIfLT0: Instruction = new Instruction("SIL", sinImpl)
+  val skipIfLT0 = new Instruction("SIL", sinImpl)
 
 }
 
@@ -84,8 +84,7 @@ object Instruction {
  * Instructions are the smallest executable building block in Scagen2. Instructions are comprised of an `Operation`
  * and a String symbol representation of the operation.
  *
- * They have no state themselves, but they rely on
- * SimpleStack to be mutable as seen in `Instruction.apply(SimpleStack)`
+ * They have no state themselves, but they rely on  SimpleStack to be mutable
  * @param function A function that uses a [[scagen2.vm.Context]] to do calculations. See [[scagen2.vm.InstructionTools]] for some examples.
  * @param symbol The symbol for this Instruction.
  */
@@ -105,10 +104,10 @@ object InstructionTools {
 
   import Instruction.{Operation, NullaryFn, UnaryFm, BinFn}
 
-  def pushGen(item: SimpleStack.ItemType): Instruction =
+  def pushGen(item: SimpleStack.ItemType) =
     new Instruction(item.formatted("%.4g"), (c: Context) => c.stack.push(item))
 
-  def toInstruction(tup: (String, BinFn)): Instruction = {
+  def binFnTupToInstruction(tup: (String, BinFn)): Instruction = {
     toInstruction(tup._1, tup._2)
   }
 
@@ -116,16 +115,28 @@ object InstructionTools {
     new Instruction(symbol, toOpType(f))
   }
 
+  def toInstruction(symbol: String, f: UnaryFm): Instruction = {
+    new Instruction(symbol, toOpType(f))
+  }
+
+
   /**
-   * A function that when given the paremeter `item` returns a function that pushes `item` onto a stack `s`
-   *
+   * Takes a binary function `f` and returns an Operation that pops two items off the stack and applies `f` to them.
+   * The first parameter to `f` will be the first one popped.
+   * @param f The binary function
+   * @return
    */
   def toOpType(f: BinFn): Operation = {
     (c: Context) => {
       val s = c.stack
-      val a = s.pop()
-      val b = s.pop()
-      s.push(f(a, b))
+      s.push(f(s.pop(), s.pop()))
+    }
+  }
+
+  def toOpType(f:UnaryFm): Operation = {
+    (c: Context) => {
+      val s = c.stack
+      s.push(f(s.pop))
     }
   }
 

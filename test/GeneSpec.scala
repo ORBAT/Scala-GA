@@ -20,7 +20,7 @@ class GeneSpec extends FlatSpec {
     , ("min", math.min _)
     , ("pow", math.pow _))
   val binaryFns: Seq[(String, BinFn)] = (basicMathFns ++ advMathFns)
-  val binaryInstructions = binaryFns.map(toInstruction(_))
+  val binaryInstructions = binaryFns.map(binFnTupToInstruction(_))
 
   def numbersToPushes(values: Seq[ItemType]): Seq[Instruction] = {
     values map { value => InstructionTools.pushGen(value) }
@@ -122,7 +122,7 @@ class GeneSpec extends FlatSpec {
       }
 
       val firstValue = values.next()
-      val (stringRep, ops) = genOperations(selectedOps map (InstructionTools.toInstruction(_)), List(), s"$firstValue")
+      val (stringRep, ops) = genOperations(selectedOps map (InstructionTools.binFnTupToInstruction(_)), List(), s"$firstValue")
       (stringRep, pushGen(firstValue) :: ops)
 
     }
